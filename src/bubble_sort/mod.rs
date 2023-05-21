@@ -1,6 +1,6 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, cmp::Ordering};
 
-pub fn bubble_sort<T>(slice: &mut [T]) -> &mut [T]
+pub fn bubble_sort<T>(slice: &mut [T], order: Ordering) -> &mut [T]
 where
     T: Ord + Debug,
 {
@@ -8,7 +8,7 @@ where
     while j > 0 {
         let mut i = 0;
         while i < j {
-            if let std::cmp::Ordering::Greater = slice[i].cmp(&slice[i + 1]) {
+            if order == slice[i].cmp(&slice[i + 1]) {
                 slice.swap(i, i + 1);
             }
             i += 1;
@@ -20,24 +20,25 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::bubble_sort;
+    use super::{bubble_sort, Ordering};
+
     #[test]
-    fn bubble_sort_test() {
+    fn bubble_test() {
         let mut unsorted_vec: Vec<i32> = DataProvider::get();
         let mut unsorted_char_vec: Vec<char> = DataProvider::get();
 
-        test_executor(bubble_sort, &mut unsorted_vec);
+        test_executor(bubble_sort, &mut unsorted_vec, Ordering::Greater);
         assert_eq!(unsorted_vec, DataProvider::get_sorted());
-        test_executor(bubble_sort, &mut unsorted_char_vec);
+        test_executor(bubble_sort, &mut unsorted_char_vec, Ordering::Greater);
         assert_eq!(unsorted_char_vec, DataProvider::get_sorted());
     }
 
-    fn test_executor<F, T>(f: F, data: &mut [T]) -> ()
+    fn test_executor<F, T>(f: F, data: &mut [T], order: Ordering) -> ()
     where
-        F: Fn(&mut [T]) -> &mut [T],
+        F: Fn(&mut [T], Ordering) -> &mut [T],
         T: Ord,
     {
-        f(data);
+        f(data, order);
     }
 
     trait Utils<T> {
@@ -56,11 +57,11 @@ mod tests {
 
     impl Utils<char> for DataProvider {
         fn get() -> Vec<char> {
-            vec!['A', 'B', 'a', 'j', 'z', 'z', '🔥']
+            vec!['a', '🔥', 'B', 'A', 'Z', 'c', 'z']
         }
 
         fn get_sorted() -> Vec<char> {
-            vec!['A', 'B', 'a', 'j', 'z', 'z', '🔥']
+            vec!['A', 'B', 'Z', 'a', 'c', 'z', '🔥']
         }
     }
 }
