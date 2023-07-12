@@ -9,7 +9,7 @@ fn main() {
     let _cpu_count = sys_info::cpu_num().unwrap_or(4);
     let mut unsorted_vec = vec![-100, 5, 1, 3, 10, 2, -20, 20, -2, 4, 2];
 
-    let x = quick_sort(&mut unsorted_vec);
+    let x = quick_sort(&mut unsorted_vec, &std::cmp::Ordering::Less);
     println!("{:?} {:?}", x, unsorted_vec);
     let j: usize = 1;
     if let Some(x) = j.checked_sub(1) {

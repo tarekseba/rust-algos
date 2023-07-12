@@ -1,5 +1,13 @@
 use std::cmp::Ordering;
 
+fn get_opposite_order(order: &Ordering) -> Ordering {
+    match order {
+        Ordering::Less => Ordering::Greater,
+        Ordering::Greater => Ordering::Less,
+        Ordering::Equal => Ordering::Greater
+    }
+}
+
 fn split<'a, T>(slice: &'a mut [T], index: usize) -> (&'a mut [T], &'a mut [T])
 where
     T: Ord + std::fmt::Debug,
@@ -14,19 +22,20 @@ where
     }
 }
 
-fn sort<T>(slice: &mut [T]) -> usize
+fn sort<T>(slice: &mut [T], left_order: &Ordering) -> usize
 where
     T: Ord + std::fmt::Debug,
 {
     let index = (slice.len() - 1) / 2;
+    let right_order = get_opposite_order(&left_order);
     slice.swap(index, slice.len() - 1);
     let mut i = 0;
     let mut j = slice.len() - 1;
     while i + 1 <= j {
-        while i < slice.len() - 1 && slice[i].cmp(&slice[slice.len() - 1]) != Ordering::Greater {
+        while i < slice.len() - 1 && slice[i].cmp(&slice[slice.len() - 1]) != *left_order {
             i += 1;
         }
-        while j > 0 && slice[j - 1].cmp(&slice[slice.len() - 1]) != Ordering::Less {
+        while j > 0 && slice[j - 1].cmp(&slice[slice.len() - 1]) != right_order {
             j -= 1;
         }
         if let Some(x) = j.checked_sub(1) {
@@ -43,12 +52,12 @@ where
     i
 }
 
-pub fn quick_sort<T: Ord + std::fmt::Debug>(slice: &mut [T]) -> () {
+pub fn quick_sort<T: Ord + std::fmt::Debug>(slice: &mut [T], order: &Ordering) -> () {
     if slice.len() >= 2 {
-        let index = sort(slice);
+        let index = sort(slice, order);
         let (first_half, second_half): (&mut [T], &mut [T]) = split(slice, index);
-        quick_sort(first_half);
-        quick_sort(second_half);
+        quick_sort(first_half, order);
+        quick_sort(second_half, order);
     }
 }
 
@@ -58,12 +67,11 @@ mod tests {
 
     use super::{quick_sort, Ordering};
 
-    //TODO: Add Ordering to quick_sort function
     fn quick_sort_wrapper<T: Ord + std::fmt::Debug>(
         slice: &mut [T],
         dummy_for_now: Ordering,
     ) -> &mut [T] {
-        quick_sort(slice);
+        quick_sort(slice, &dummy_for_now);
         slice
     }
 
