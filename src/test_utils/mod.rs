@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use crate::quick_sort::Sorting;
 
 pub trait TestUtils<T> {
     fn get() -> Vec<T>;
@@ -26,9 +26,9 @@ impl TestUtils<char> for DataProvider {
     }
 }
 
-pub fn test_executor<F, T>(f: F, data: &mut [T], order: Ordering) -> ()
+pub fn test_executor<F, T>(f: F, data: &mut [T], order: Sorting) -> ()
 where
-    F: Fn(&mut [T], Ordering) -> &mut [T],
+    F: Fn(&mut [T], Sorting) -> &mut [T],
     T: Ord,
 {
     f(data, order);
