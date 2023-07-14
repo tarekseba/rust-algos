@@ -1,27 +1,6 @@
 use std::{cmp::Ordering, slice};
 
-pub enum Sorting {
-    Ascending,
-    Descending,
-}
-
-impl Sorting {
-    fn flip(&self) -> Sorting {
-        match &self {
-            Sorting::Ascending => Sorting::Descending,
-            Sorting::Descending => Sorting::Ascending,
-        }
-    }
-}
-
-impl From<&Sorting> for Ordering {
-    fn from(value: &Sorting) -> Self {
-        match value {
-            Sorting::Descending => Self::Less,
-            _ => Self::Greater,
-        }
-    }
-}
+use crate::utils::Sorting;
 
 pub fn vec_from_raw_ptr<T>(ptr: usize, len: usize) -> ()
 where

@@ -1,10 +1,13 @@
-use std::{cmp::Ordering, fmt::Debug};
+use std::{fmt::Debug, cmp::Ordering};
 
-pub fn bubble_sort<T>(slice: &mut [T], order: Ordering) -> &mut [T]
+use crate::utils::Sorting;
+
+pub fn bubble_sort<T>(slice: &mut [T], order: Sorting) -> &mut [T]
 where
     T: Ord + Debug,
 {
     let mut j = slice.len() - 1;
+    let order = Ordering::from(&order);
     while j > 0 {
         let mut i = 0;
         while i < j {
@@ -20,18 +23,18 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::test_utils::{DataProvider, TestUtils, test_executor};
+    use crate::{test_utils::{DataProvider, TestUtils, test_executor}, utils::Sorting};
 
-    use super::{bubble_sort, Ordering};
+    use super::{bubble_sort};
 
     #[test]
     fn bubble_test() {
         let mut unsorted_vec: Vec<i32> = DataProvider::get();
         let mut unsorted_char_vec: Vec<char> = DataProvider::get();
 
-        test_executor(bubble_sort, &mut unsorted_vec, Ordering::Greater);
+        test_executor(bubble_sort, &mut unsorted_vec, Sorting::Ascending);
         assert_eq!(unsorted_vec, DataProvider::get_sorted());
-        test_executor(bubble_sort, &mut unsorted_char_vec, Ordering::Greater);
+        test_executor(bubble_sort, &mut unsorted_char_vec, Sorting::Ascending);
         assert_eq!(unsorted_char_vec, DataProvider::get_sorted());
     }
 }

@@ -1,4 +1,4 @@
-use crate::quick_sort::Sorting;
+use crate::utils::Sorting;
 
 pub trait TestUtils<T> {
     fn get() -> Vec<T>;
