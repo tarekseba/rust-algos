@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 
 pub mod thread_pools;
 
+#[derive(Clone)]
 pub enum Sorting {
     Ascending,
     Descending,
