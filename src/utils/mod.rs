@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, fs, str::FromStr};
 
 pub mod thread_pools;
 
@@ -24,4 +24,17 @@ impl From<&Sorting> for Ordering {
             _ => Self::Greater,
         }
     }
+}
+
+pub fn read_input<T>() -> Result<Vec<T>, String>
+where
+    T: FromStr,
+{
+    let data = fs::read_to_string("src/input.txt").unwrap();
+    data.lines()
+        .map(|line| {
+            line.trim().parse::<T>()
+                .map_err(|_| String::from("parsing failed"))
+        })
+        .collect()
 }
