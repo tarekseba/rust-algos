@@ -141,30 +141,57 @@ where
 
     let ptr = slice.as_mut_ptr() as usize;
     let _ = data_tx.send((ptr, slice.len()));
+    let mut buffer: Vec<(usize, usize)> = vec![];
 
     let now = Instant::now();
     loop {
         let received = state_rx.recv().unwrap();
         match received {
             Some((ptr, len)) => {
-                // println!("main thread: received slice");
-                let mut act_threads = active_threads.write().unwrap();
-                *act_threads += 1;
-                drop(act_threads);
-                match data_tx.send((ptr, len)) {
-                    Ok(_) => (),
-                    Err(err) => println!("Error sending slice: {:?}", err),
+                let act_threads = active_threads.read().unwrap();
+                if *act_threads < tp.thread_count {
+                    drop(act_threads);
+                    let mut act_threads = active_threads.write().unwrap();
+                    let to_send = if !buffer.is_empty() {
+                        buffer.pop().unwrap()
+                    } else {
+                        (ptr, len)
+                    };
+                    *act_threads += 1;
+                    drop(act_threads);
+                    match data_tx.send(to_send) {
+                        Ok(_) => (),
+                        Err(err) => println!("Error sending slice: {:?}", err),
+                    }
+                } else {
+                    buffer.push((ptr, len));
                 }
             }
             None => {
                 let mut act_threads = active_threads.write().unwrap();
-                println!("active threads : {:?}", *act_threads);
                 if *act_threads > 1 {
                     *act_threads -= 1;
+                    while *act_threads < tp.thread_count && !buffer.is_empty() {
+                        *act_threads += 1;
+                        match data_tx.send(buffer.pop().unwrap()) {
+                            Ok(_) => (),
+                            Err(err) => println!("Error sending slice: {:?}", err),
+                        }
+                    }
                 } else {
-                    *act_threads = 0;
-                    println!("Leaving, cya...");
-                    break;
+                    if !buffer.is_empty() {
+                        while *act_threads < tp.thread_count && !buffer.is_empty() {
+                            *act_threads += 1;
+                            match data_tx.send(buffer.pop().unwrap()) {
+                                Ok(_) => (),
+                                Err(err) => println!("Error sending slice: {:?}", err),
+                            }
+                        }
+                    } else {
+                        *act_threads = 0;
+                        println!("Leaving, cya...");
+                        break;
+                    }
                 }
             }
         }
@@ -192,7 +219,7 @@ fn qs_tp<T>(
                 let (first_half, second_half): (&mut [T], &mut [T]) = split(slice, index);
                 let slice_len = first_half.len();
                 let act_threads = active_threads.read().unwrap();
-                if first_half.len() > 20 && thread_count > *act_threads {
+                if thread_count > *act_threads && first_half.len() > 40 {
                     drop(act_threads);
                     let slice_ptr = first_half.as_mut_ptr() as usize;
                     match state_tx.send(Some((slice_ptr, slice_len))) {
@@ -204,6 +231,7 @@ fn qs_tp<T>(
                     qs_tp_aux(first_half, &state_tx, &active_threads, &thread_count);
                 }
                 qs_tp_aux(second_half, &state_tx, &active_threads, &thread_count);
+                println!("end");
             }
             state_tx.send(None);
         } else {
@@ -231,7 +259,7 @@ fn qs_tp_aux<T>(
         };
         let slice_len = first_half.len();
         let act_threads = active_threads.read().unwrap();
-        if first_half.len() > 20 && *thread_count > *act_threads {
+        if *thread_count > *act_threads && first_half.len() > 40 {
             drop(act_threads);
             let slice_ptr = first_half.as_mut_ptr() as usize;
             match state_tx.send(Some((slice_ptr, slice_len))) {
